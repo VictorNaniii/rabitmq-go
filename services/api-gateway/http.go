@@ -44,6 +44,6 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to parse response body", http.StatusBadRequest)
 		return
 	}
-	response := contracts.APIResponse{Data: "ok"}
+	response := contracts.APIResponse{Data: respBody}
 	writeJSON(w, http.StatusOK, response)
 }
