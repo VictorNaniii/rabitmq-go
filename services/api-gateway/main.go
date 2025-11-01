@@ -23,16 +23,20 @@ func main() {
 		w.Write([]byte("Hello from API Gateway"))
 	})
 	mux.HandleFunc("/trips/preview", handleTripPreview)
-
+	mux.HandleFunc("/ws/drivers", handleDriverWebSocket)
+	mux.HandleFunc("/ws/riders", handleRiderWebSocket)
 	server := &http.Server{
 		Addr:    httpAddr,
 		Handler: mux,
 	}
+
 	serverErrors := make(chan error, 1)
+
 	go func() {
 		log.Println("Server is listening on", httpAddr)
 		serverErrors <- server.ListenAndServe()
 	}()
+
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt)
 
