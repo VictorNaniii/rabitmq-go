@@ -41,3 +41,27 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 	response := contracts.APIResponse{Data: tripPreview}
 	writeJSON(w, http.StatusOK, response)
 }
+
+func handleTripStart(w http.ResponseWriter, r *http.Request) {
+	var reqBody startTripRequest
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "failed to parse JSON data", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+	tripService, err := grpc_client.NewTripServiceClient()
+
+	if err != nil {
+		log.Println(err)
+	}
+	defer tripService.Close()
+
+	trip, err := tripService.Client.CreateTrip(r.Context(), reqBody.toProto())
+	if err != nil {
+		log.Println("Failed to start a trip:", err)
+		http.Error(w, "Failed to start a trip", http.StatusBadRequest)
+		return
+	}
+	response := contracts.APIResponse{Data: trip}
+	writeJSON(w, http.StatusCreated, response)
+}

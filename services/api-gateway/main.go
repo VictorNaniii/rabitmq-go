@@ -23,6 +23,7 @@ func main() {
 		w.Write([]byte("Hello from API Gateway"))
 	})
 	mux.HandleFunc("/trip/preview", enableCORS(handleTripPreview))
+	mux.HandleFunc("/trip/start", enableCORS(handleTripStart))
 	mux.HandleFunc("/ws/drivers", handleDriverWebSocket)
 	mux.HandleFunc("/ws/riders", handleRiderWebSocket)
 	server := &http.Server{
