@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"ride-sharing/services/trip-service/internal/domain"
 	trypTypes "ride-sharing/services/trip-service/pkg/types"
@@ -35,6 +36,7 @@ func (s *TripService) GetRoute(ctx context.Context, pickup, destination *types.C
 		"http://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=full&geometries=geojson",
 		pickup.Longitude, pickup.Latitude, destination.Longitude, destination.Latitude,
 	)
+	log.Printf("Fetching from OSRM API: URL: %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Println("Error making request to OSRM:", err)
@@ -53,7 +55,22 @@ func (s *TripService) GetRoute(ctx context.Context, pickup, destination *types.C
 	}
 	return &routeResponse, nil
 }
+func (s *TripService) GetAndValidateFare(ctx context.Context, fareID, userID string) (*domain.RideFareModel, error) {
+	fare, err := s.repo.GetRiderFarerByID(ctx, fareID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get trip fare: %w", err)
+	}
 
+	if fare == nil {
+		return nil, fmt.Errorf("fare does not exist")
+	}
+
+	if userID != fare.UserId {
+		return nil, fmt.Errorf("fare does not belong to the user")
+	}
+
+	return fare, nil
+}
 func (s *TripService) EstimatePackagesPriceWithRoute(route *trypTypes.OSRMRoute) []*domain.RideFareModel {
 	baseFares := getBaseFares()
 	estimatedFares := make([]*domain.RideFareModel, len(baseFares))
