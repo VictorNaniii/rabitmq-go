@@ -2,8 +2,9 @@ package domain
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	trypTypes "ride-sharing/services/trip-service/pkg/types"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	pb "ride-sharing/shared/proto/trip"
 	"ride-sharing/shared/types"
@@ -24,7 +25,7 @@ type TripRepository interface {
 type TripService interface {
 	CreateTrip(ctx context.Context, fare *RideFareModel) (*TripModel, error)
 	GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*trypTypes.OSRMRoute, error)
-	EstimatePackagePriceWithRoute(route *trypTypes.OSRMRoute) []*RideFareModel
+	EstimatePackagesPriceWithRoute(route *trypTypes.OSRMRoute) []*RideFareModel
 	GenerateTripFares(ctx context.Context, fares []*RideFareModel, userID string) ([]*RideFareModel, error)
 	GetAndValidateFare(ctx context.Context, fareID, userID string) (*RideFareModel, error)
 }

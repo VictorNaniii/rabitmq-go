@@ -26,7 +26,7 @@ func (r *InMemRepository) SaveRideFare(ctx context.Context, f *domain.RideFareMo
 	r.riderFares[f.ID.Hex()] = f
 	return nil
 }
-func (r *InMemRepository) GetRideFareById(ctx context.Context, id string) (*domain.RideFareModel, error) {
+func (r *InMemRepository) GetRiderFarerByID(ctx context.Context, id string) (*domain.RideFareModel, error) {
 	fare, exist := r.riderFares[id]
 	if !exist {
 		return nil, fmt.Errorf("fare does not exist with ID: %s", id)
