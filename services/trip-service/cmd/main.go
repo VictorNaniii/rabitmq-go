@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"ride-sharing/services/trip-service/internal/infrastructure/events"
 	"ride-sharing/services/trip-service/internal/infrastructure/grpc"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
 	"ride-sharing/services/trip-service/internal/service"
@@ -34,15 +35,16 @@ func main() {
 	if err != nil {
 		log.Fatal("FAiled to listen:", err)
 	}
-	rabitMq, err := messaging.NewRabbitMq(rabbitMqUri)
+	rabbitMq, err := messaging.NewRabbitMq(rabbitMqUri)
 	if err != nil {
 		log.Fatalf("failed to connect rabbitmq: %v", err)
 	}
-	defer rabitMq.Close()
+	defer rabbitMq.Close()
+	publisher := events.NewTripEventPublisher(rabbitMq)
 	//Starting gRPC Server
 	grpcServer := grpserver.NewServer()
-	grpc.NewGRPCHandler(grpcServer, tripSvc)
-	log.Println("sTARTING gRPC server on port: ", lis.Addr().String())
+	grpc.NewGRPCHandler(grpcServer, tripSvc, publisher)
+	log.Println("Starting gRPC server on port: ", lis.Addr().String())
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {

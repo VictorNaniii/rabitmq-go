@@ -41,6 +41,13 @@ func main() {
 	// Starting the gRPC server
 	grpcServer := grpcserver.NewServer()
 	NewGrpcHandler(grpcServer, svc)
+	consumer := NewTripConsumer(rabitMq)
+
+	go func() {
+		if err := consumer.Listen(); err != nil {
+			log.Fatalf("Failde to listen to the message: %v", err)
+		}
+	}()
 
 	log.Printf("Starting gRPC server Driver service on port %s", lis.Addr().String())
 
