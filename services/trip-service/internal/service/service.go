@@ -30,7 +30,7 @@ func (s *TripService) CreateTrip(ctx context.Context, fare *domain.RideFareModel
 	}
 	return s.repo.CreateTrip(ctx, trip)
 }
-func (s *TripService) GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*trypTypes.OSRMRoute, error) {
+func (s *TripService) GetRoute(ctx context.Context, pickup, destination *types.Coordinate, isTrue bool) (*trypTypes.OSRMRoute, error) {
 
 	url := fmt.Sprintf(
 		"http://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=full&geometries=geojson",
@@ -82,7 +82,7 @@ func (s *TripService) EstimatePackagesPriceWithRoute(route *trypTypes.OSRMRoute)
 	return estimatedFares
 }
 
-func (s *TripService) GenerateTripFares(ctx context.Context, rideFares []*domain.RideFareModel, userID string) ([]*domain.RideFareModel, error) {
+func (s *TripService) GenerateTripFares(ctx context.Context, rideFares []*domain.RideFareModel, userID string, routs *trypTypes.OSRMRoute) ([]*domain.RideFareModel, error) {
 	fares := make([]*domain.RideFareModel, len(rideFares))
 
 	for i, f := range rideFares {
@@ -93,6 +93,7 @@ func (s *TripService) GenerateTripFares(ctx context.Context, rideFares []*domain
 			ID:                id,
 			TotalPriceInCents: f.TotalPriceInCents,
 			PackageSlug:       f.PackageSlug,
+			Route:             routs,
 		}
 
 		if err := s.repo.SaveRideFare(ctx, fare); err != nil {
@@ -104,7 +105,6 @@ func (s *TripService) GenerateTripFares(ctx context.Context, rideFares []*domain
 
 	return fares, nil
 }
-
 func estimateFareRoute(f *domain.RideFareModel, route *trypTypes.OSRMRoute) *domain.RideFareModel {
 	pricingCfg := trypTypes.DefaultPricingConfig()
 	carPackagePrice := f.TotalPriceInCents

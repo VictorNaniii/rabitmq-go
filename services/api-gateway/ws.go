@@ -3,8 +3,9 @@ package main
 import (
 	"log"
 	"net/http"
+	"ride-sharing/services/api-gateway/grpc_client"
 	"ride-sharing/shared/contracts"
-	"ride-sharing/shared/util"
+	"ride-sharing/shared/proto/driver"
 
 	"github.com/gorilla/websocket"
 )
@@ -51,24 +52,33 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Println("No slug providers")
 		return
 	}
-
-	type Driver struct {
-		Id             string `json:"id"`
-		Name           string `json:"name"`
-		ProfilePicture string `json:"profilePicture"`
-		CarPlate       string `json:"carPlate"`
-		PackageSlug    string `json:"packageSlug"`
+	ctx := r.Context()
+	driverService, err := grpc_client.NewDriverServiceClient()
+	if err != nil {
+		log.Fatal(err)
 	}
+	defer func() {
+		driverService.Client.UnregisterDriver(ctx, &driver.RegisterDriverRequest{
+			DriverID:    userID,
+			PackageSlug: packageSlug,
+		})
+		driverService.Close()
+		log.Println("Driver unregister: ", userID)
+	}()
+	driverData, err := driverService.Client.RegisterDriver(ctx, &driver.RegisterDriverRequest{
+		DriverID:    userID,
+		PackageSlug: packageSlug,
+	})
+	if err != nil {
+		log.Println("Error register driver: %v", err)
+		return
+	}
+
 	msg := contracts.WSMessage{
 		Type: "driver.cmd.register",
-		Data: Driver{
-			Id:             userID,
-			Name:           "VCitor",
-			ProfilePicture: util.GetRandomAvatar(1),
-			CarPlate:       "ABFS31",
-			PackageSlug:    packageSlug,
-		},
+		Data: driverData.Driver,
 	}
+
 	if err := conn.WriteJSON(msg); err != nil {
 		log.Println("Error sending message:", err)
 		return

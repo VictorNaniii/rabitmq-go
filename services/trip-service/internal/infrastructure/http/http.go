@@ -31,7 +31,7 @@ func (h *HttpControler) HandleTripPreview(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	tripModel, err := h.Service.GetRoute(ctx, &reqBody.Pickup, &reqBody.Destination)
+	tripModel, err := h.Service.GetRoute(ctx, &reqBody.Pickup, &reqBody.Destination, true)
 
 	if err != nil {
 		log.Println("Failed to create trip model", err)

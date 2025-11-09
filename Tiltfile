@@ -3,12 +3,18 @@ load('ext://restart_process', 'docker_build_with_restart')
 
 ### K8s Config ###
 
-# Uncomment to use secrets
-# k8s_yaml('./infra/development/k8s/secrets.yaml')
+
+k8s_yaml('./infra/development/k8s/secrets.yaml')
 
 k8s_yaml('./infra/development/k8s/app-config.yaml')
 
 ### End of K8s Config ###
+
+### RabbitMQ ###
+k8s_yaml('./infra/development/k8s/rabbitmq-deployment.yaml')
+k8s_resource('rabbitmq', port_forwards=['5672', '15672'], labels='tooling')
+### End RabbitMQ ###
+
 ### API Gateway ###
 
 gateway_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/api-gateway ./services/api-gateway'
@@ -73,7 +79,7 @@ k8s_resource('trip-service', resource_deps=['trip-service-compile'], labels="ser
 
 ### Driver Service ###
 
-driver_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/driver-service ./services/driver-service/main.go'
+driver_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/driver-service ./services/driver-service'
 if os.name == 'nt':
  driver_compile_cmd = './infra/development/docker/driver-build.bat'
 
